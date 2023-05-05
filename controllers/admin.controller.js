@@ -1,4 +1,6 @@
 // Profile
+const mongoose = require('mongoose');
+
 async function serveProfile(){
 
 }
