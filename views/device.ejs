@@ -1,0 +1,135 @@
+<%- include('partials/Header',{'username':locals.username,'activeDevices':1}) %>
+    <title><%=locals.AUTH_ID%> Temp & Hum</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/JS/Chart.js-2.9.3/dist/Chart.min.js"></script>
+    <script defer>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log(document.getElementById('line-chart'))
+            var ctx = document.getElementById("line-chart").getContext("2d");
+            const chart = new Chart(ctx, {
+              type: "line",
+              data: {
+                labels: [],
+                datasets: [
+                  {
+                    label: "Temperature",
+                    yAxisID: "y-axis-1",
+                    fill:true,
+                    backgroundColor: "rgba(255, 0, 0, 0.24)",
+                    borderColor: "red",
+                    borderWidth: 1,
+                    pointHoverBorderColor:"red",
+                    pointHitRadius:70,
+                    data: []
+                  },
+                  {
+                    label: "Humidity",
+                    yAxisID: "y-axis-2",
+                    fill:true,
+                    backgroundColor: "lightblue",
+                    borderColor: "blue",
+                    borderWidth: 1,
+                    pointHoverBorderColor:"blue",
+                    pointHitRadius:70,
+                    data: []
+                  }
+                ]
+              },
+              options: {
+                responsive:true,
+                scales: {
+                  yAxes: [
+                    {
+                      type: "linear",
+                      position: "left",
+                      id: "y-axis-1",
+                      scaleLabel: {
+                        display: true,
+                        labelString: "Temperature °C"
+                      },
+                      maxTicksLimit: 4,
+                      stepSize: 25,
+                      ticks: {
+                        min:0,
+                        max: 100
+                      }
+                    },
+                    {
+                      type: "linear",
+                      position: "right",
+                      id: "y-axis-2",
+                      scaleLabel: {
+                        display: true,
+                        labelString: "Humidity %"
+                      },
+                      maxTicksLimit: 4,
+                      stepSize: 25,
+                      ticks: {
+                        min:0,
+                        max: 100
+                      }
+                    }
+                  ],
+                }
+              }
+            });
+            function updateChart(data) {
+                if(!chart){
+                    return;
+                }
+                // console.log(data)
+                if(chart.data.labels.length > 4){
+                  chart.data.labels.shift();
+                  chart.data.datasets[0].data.shift();
+                  chart.data.datasets[1].data.shift();
+                }
+                chart.data.labels.push(data.time);
+                document.getElementById('T').innerText = data.data.Temperature;
+                document.getElementById('H').innerText = data.data.Humidity;
+                chart.data.datasets[0].data.push(data.data.Temperature);
+                chart.data.datasets[1].data.push(data.data.Humidity);
+                chart.update();
+            }
+            const socket = io('http://hightower.ddns.net:80',{
+                query:{
+                    username: "<%=locals.username%>",
+                    AUTH_ID: "<%=locals.AUTH_ID%>"
+                }
+            });
+            socket.on("message", function(data) {
+              console.log(data);
+              updateChart(data);
+            });
+    });
+    </script>
+    <div>
+        <h1>DeviceID : <%= locals.AUTH_ID %></h1>
+    </div>
+    <div class="row gx-4 gy-1 justify-content-center align-items-center">
+        <div class="col-6">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Temperature is : <span id="T" style="color: rgb(77, 81, 86);">-1</span>°C<br></h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Humidity is : <span id="H" style="color: rgb(77, 81, 86);">-1</span>%<br></h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-9 col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Temperature & Humidity Chart</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="line-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<%- include('partials/Footer') %>

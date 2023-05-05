@@ -1,0 +1,15 @@
+<head>
+    <title>
+        Home Page
+    </title>
+</head>
+<form action="/login" method="POST">
+    <button name="disconnect" value="true" style="display:inline-block;margin-left: 10px;margin-bottom:10px;background-color:lightcoral;">Disconnect</button>
+</form>
+<h1>Welcome Back Mr <%= locals.username %></h1>
+
+<% for(var device of locals.devices){%>
+    <div>
+        <a href="/home/<%=device.AUTH_ID%>"><button><%=device.AUTH_ID%></button></a>
+    </div>
+<% };%>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Chart.js Mqtt Viewer</title>
+</head>
+<body>
+  <% locals.devices.map((num) => { %>
+  <div style="width:600px;height:350px;display:inline-block;">
+    <canvas id="line-chart<%=num%>"></canvas>
+  </div>
+  <% }); %>
+    <script src="/socket.io/socket.io.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+    <script>var charts = [];</script>
+  <% locals.devices.map((num) => { %>
+    <script>
+        var ctx = document.getElementById("line-chart<%=num%>").getContext("2d");
+        var chart;
+        charts[parseInt("<%=num%>")] = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: "Temperature",
+                yAxisID: "y-axis-1",
+                fill:true,
+                backgroundColor: "rgba(255, 0, 0, 0.24)",
+                borderColor: "red",
+                borderWidth: 1,
+                pointHoverBorderColor:"red",
+                data: []
+              },
+              {
+                label: "Humidity",
+                yAxisID: "y-axis-2",
+                fill:true,
+                backgroundColor: "lightblue",
+                borderColor: "blue",
+                borderWidth: 1,
+                pointHoverBorderColor:"red",
+                data: []
+              }
+            ]
+          },
+          options: {
+            scales: {
+              yAxes: [
+                {
+                  type: "linear",
+                  position: "left",
+                  id: "y-axis-1",
+                  scaleLabel: {
+                    display: true,
+                    labelString: "Temperature °C"
+                  },
+                  ticks: {
+                    min: 0,
+                    max: 100
+                  }
+                },
+                {
+                  type: "linear",
+                  position: "right",
+                  id: "y-axis-2",
+                  scaleLabel: {
+                    display: true,
+                    labelString: "Humidity %"
+                  },
+                  ticks: {
+                    min: 0,
+                    max: 100
+                  }
+                }
+              ]
+            }
+          }
+        });
+    </script>
+  <% }); %>
+    <script>
+      function updateChart(data) {
+        // console.log(data)
+        if(charts[data.Number].data.labels.length > 5){
+          charts[data.Number].data.labels.shift();
+          charts[data.Number].data.datasets[0].data.shift();
+          charts[data.Number].data.datasets[1].data.shift();
+        }
+        charts[data.Number].data.labels.push(data.time);
+        charts[data.Number].data.datasets[0].data.push(data.msg.Temperature);
+        charts[data.Number].data.datasets[1].data.push(data.msg.Humidity);
+
+        charts[data.Number].update();
+      }
+    </script>
+    <script>
+      const socket = io();
+      socket.on("message_mqtt", function(data) {
+        console.log(data);
+        updateChart(data);
+      });
+      function SendHello(timeInSeconds){
+        socket.emit('setDataInterval',parseInt(timeInSeconds));
+        // console.log(timeInSeconds)
+      }
+    </script>
+    <select onchange="SendHello(this.value);">
+      <option value='1'>1 Second</option>
+      <option value='5' selected>5 Seconds</option>
+      <option value='10'>10 Seconds</option>
+      <option value='15'>15 Seconds</option>
+    </select>
+    </div>
+</body>
+</html>

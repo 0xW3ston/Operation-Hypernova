@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title><%=locals.AUTH_ID%> Temp & Hum</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/JS/Chart.js-2.9.3/dist/Chart.min.js"></script>
+</head>
+<body>
+<%-include('menu',{username: locals.username})%>
+<h1>Device ID <%= locals.AUTH_ID %></h1>
+<div style="width:600px;height:350px;display:inline-block;">
+    <canvas id="line-chart"></canvas>
+</div>
+<div>
+  <h1>The Temperature is <span id="T" style="text-decoration: underline;">-1</span> Degree Celcius</h1>
+  <h1>The Humidity is <span id="H" style="text-decoration: underline;">-1</span> %</h1>
+</div>
+<script>
+    var ctx = document.getElementById("line-chart").getContext("2d");
+    const chart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: "Temperature",
+            yAxisID: "y-axis-1",
+            fill:true,
+            backgroundColor: "rgba(255, 0, 0, 0.24)",
+            borderColor: "red",
+            borderWidth: 1,
+            pointHoverBorderColor:"red",
+            pointHitRadius:70,
+            data: []
+          },
+          {
+            label: "Humidity",
+            yAxisID: "y-axis-2",
+            fill:true,
+            backgroundColor: "lightblue",
+            borderColor: "blue",
+            borderWidth: 1,
+            pointHoverBorderColor:"blue",
+            pointHitRadius:70,
+            data: []
+          }
+        ]
+      },
+      options: {
+        scales: {
+          yAxes: [
+            {
+              type: "linear",
+              position: "left",
+              id: "y-axis-1",
+              scaleLabel: {
+                display: true,
+                labelString: "Temperature °C"
+              },
+              ticks: {
+                min: 0,
+                max: 100
+              }
+            },
+            {
+              type: "linear",
+              position: "right",
+              id: "y-axis-2",
+              scaleLabel: {
+                display: true,
+                labelString: "Humidity %"
+              },
+              ticks: {
+                min: 0,
+                max: 100
+              }
+            }
+          ]
+        }
+      }
+    });
+    function updateChart(data) {
+        // console.log(data)
+        if(chart.data.labels.length > 5){
+          chart.data.labels.shift();
+          chart.data.datasets[0].data.shift();
+          chart.data.datasets[1].data.shift();
+        }
+        chart.data.labels.push(data.time);
+        document.getElementById('T').innerText = data.data.Temperature;
+        document.getElementById('H').innerText = data.data.Humidity;
+        chart.data.datasets[0].data.push(data.data.Temperature);
+        chart.data.datasets[1].data.push(data.data.Humidity);
+
+        chart.update();
+    }
+</script>
+<script>
+  const socket = io('http://localhost:80',{
+      query:{
+          username: "<%=locals.username%>",
+          AUTH_ID: "<%=locals.AUTH_ID%>"
+      }
+  });
+  socket.on("message", function(data) {
+    console.log(data);
+    updateChart(data);
+  });
+</script>
+</body>

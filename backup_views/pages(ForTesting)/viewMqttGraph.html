@@ -1,0 +1,102 @@
+<html>
+  <head>
+    <style>
+      .line {
+        fill: none;
+        stroke: steelblue;
+        stroke-width: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="/http"><button>HTTP</button></a>
+    <a href="/mqtt"><button>MQTT</button></a>
+    <a href="/graphMqtt"><button>MQTT (Graph)</button></a>
+    <svg width="960" height="500"></svg>
+
+    <script src="/d3.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const data = [];
+      const socket = io();
+
+      socket.on("message_mqtt", newData => {
+        document.getElementById('data').innerText = newData.msg;
+        data.push({ value: newData.msg, date: new Date() });
+        updateLine();
+      });
+
+      const margin = { top: 20, right: 20, bottom: 30, left: 50 };
+      const width = 960 - margin.left - margin.right;
+      const height = 500 - margin.top - margin.bottom;
+
+      const svg = d3
+        .select("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+      const x = d3
+        .scaleTime()
+        .range([0, width]);
+
+      const y = d3
+        .scaleLinear()
+        .range([height, 0]);
+
+      const line = d3
+        .line()
+        .x(d => x(d.date))
+        .y(d => y(d.value));
+
+      const xAxis = d3.axisBottom(x);
+      const yAxis = d3.axisLeft(y);
+
+      svg
+        .append("g")
+        .attr("class", "x axis")
+        .attr("transform", `translate(0,${height})`)
+        .call(xAxis);
+
+      svg
+        .append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+        .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 6)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Value");
+
+      function updateLine() {
+        x.domain(d3.extent(data, d => d.date));
+        y.domain([0, d3.max(data, d => d.value)]);
+
+        svg
+          .select(".x.axis")
+          .call(xAxis);
+
+        svg
+          .select(".y.axis")
+          .call(yAxis);
+
+        svg
+          .select(".line")
+          .remove();
+
+        svg
+          .append("path")
+          .datum(data)
+          .attr("class", "line")
+          .attr("d", line);
+
+        svg
+          .selectAll(".dot")
+          .remove();
+      }
+      </script>
+      <h1>Data is : <span id="data">-1</span></h1>
+</body>
+</html>
