@@ -1,9 +1,11 @@
-const Personne = require('./personne.model');
-const Device = require('./device.model');
-const Data = require('./data.model');
+const { Data } = require("./Data");
+const { Device } = require("./Device");
+const { Subscription } = require("./Subcription");
+const { User } = require("./User");
 
 module.exports = {
-    Personne,
+    Data,
     Device,
-    Data
-};
+    Subscription,
+    User
+}

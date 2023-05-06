@@ -1,70 +1,73 @@
+require('dotenv').config();
+require('./models/index')
+
 const chalk = require('chalk');
 const logger = require('morgan');
 const express = require('express');
 const session = require('express-session');
 const app = express();
 
-// Set Up Rate-Limiting System:
-const cacheNode = require('node-cache');
-const MainCache = new cacheNode();
-const maxRequestsPerSecond = 4;
-const rateLimitDuration = 1; // In seconds
+// // Set Up Rate-Limiting System:
+// const cacheNode = require('node-cache');
+// const MainCache = new cacheNode();
+// const maxRequestsPerSecond = 4;
+// const rateLimitDuration = 1; // In seconds
 
-function isRateLimited(ip) {
-  const key = `rate-limit:${ip}`;
-  const count = MainCache.get(key) || 0;
-  if (count >= maxRequestsPerSecond) {
-    banIP(ip);
-    console.log(chalk.greenBright("Banned IP: " + ip))
-    return true;
-  }
+// function isRateLimited(ip) {
+//   const key = `rate-limit:${ip}`;
+//   const count = MainCache.get(key) || 0;
+//   if (count >= maxRequestsPerSecond) {
+//     banIP(ip);
+//     console.log(chalk.greenBright("Banned IP: " + ip))
+//     return true;
+//   }
 
-  MainCache.set(key, count + 1, rateLimitDuration);
-  console.log(count);
-  return false;
-}
+//   MainCache.set(key, count + 1, rateLimitDuration);
+//   console.log(count);
+//   return false;
+// }
 
-function banIP(ip) {
-  const key = `ban:${ip}`;
-  MainCache.set(key, true);
-}
+// function banIP(ip) {
+//   const key = `ban:${ip}`;
+//   MainCache.set(key, true);
+// }
 
-function rateLimitAndBanMiddleware(req, res, next) {
-  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+// function rateLimitAndBanMiddleware(req, res, next) {
+//   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
-  if (MainCache.get(`ban:${ip}`)) {
-    res.statusCode = 403;
-    res.redirect('http://www.google.com');
-    return;
-  }
+//   if (MainCache.get(`ban:${ip}`)) {
+//     res.statusCode = 403;
+//     res.redirect('http://www.google.com');
+//     return;
+//   }
 
-  if (isRateLimited(ip)) {
-    res.statusCode = 429;
-    res.send("no")
-    return;
-  }
+//   if (isRateLimited(ip)) {
+//     res.statusCode = 429;
+//     res.send("no")
+//     return;
+//   }
 
-  next();
-}
+//   next();
+// }
 
 
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 const mqtt = require('mqtt');
-const controllers = require('./controllers/data.controller');
+// const controllers = require('./controllers/data.controller');
 
 //
 app.use(express.static('./public',{root:__dirname}))
 app.set('view engine','ejs');
 app.set('views','./views',{root:__dirname});
 
-mongoose.connect('mongodb://127.0.0.1:27017/DB')
+mongoose.connect(`${process.env.DB_URL}`)
   .then(() => {
     console.log("Connected to DB");
   })
 
-const mqtt_client = mqtt.connect('mqtt://localhost:1883/');
+const mqtt_client = mqtt.connect(process.env.MQTT_URL);
 
 app.use(cors())
 
@@ -73,23 +76,22 @@ const server = app.listen(80, function () {
   console.log('Example app listening on port 80!');
 });
 
-logger.format('FORMAT_MAIN', function (tokens, req, res) {
-  const Now = new Date().toISOString();
-  const date = Now.substring(11,19);
-  const isBanned = MainCache.get(`ban:${req.ip}`);
-  process.stdout.write('\x07');
-  return [
-    chalk.gray(date), // Add timestamp in gray
-    ( !isBanned ? chalk.green(req.ip) : chalk.red.strikethrough(req.ip)),                  // Add client IP address in green
-    chalk.yellow(tokens.method(req, res)),
-    chalk.cyan(tokens.url(req, res)),
-    tokens.status(req, res),
-    tokens.res(req, res, 'content-length'), '-',
-    chalk.magenta(tokens['response-time'](req, res)), 'ms' // Color response time in magenta
-  ].join(' ');
-});
+// logger.format('FORMAT_MAIN', function (tokens, req, res) {
+//   const Now = new Date().toISOString();
+//   const date = Now.substring(11,19);
+//   const isBanned = MainCache.get(`ban:${req.ip}`);
+//   process.stdout.write('\x07');
+//   return [
+//     chalk.gray(date), // Add timestamp in gray
+//     ( !isBanned ? chalk.green(req.ip) : chalk.red.strikethrough(req.ip)),                  // Add client IP address in green
+//     chalk.yellow(tokens.method(req, res)),
+//     chalk.cyan(tokens.url(req, res)),
+//     tokens.status(req, res),
+//     tokens.res(req, res, 'content-length'), '-',
+//     chalk.magenta(tokens['response-time'](req, res)), 'ms' // Color response time in magenta
+//   ].join(' ');
+// });
 
-app.use(logger('FORMAT_MAIN'))
 app.use(express.json())
 app.use(express.urlencoded({extended:true}));
 app.use(cookieParser());
@@ -110,15 +112,16 @@ const io = require('socket.io')(server, {
 
 // app.use(rateLimitAndBanMiddleware);
 
+// [Applying Routes]:
+app.use(require('./routes/user'));
+app.use('/admin',require('./routes/admin'));
+app.use(require('./routes/sse'));
+app.use(require('./routes/device'));
+app.use(require('./routes/auth'));
+
 app.get('/',(req,res)=>{
   res.redirect('/login');
 });
-
-app.get('/login',controllers.showLogin);
-app.post('/login',controllers.verifyLogin);
-app.get('/home',controllers.showHome);
-app.get('/devices',controllers.showDevices);
-app.get('/device/:AUTH_ID',controllers.showDevice);
 
 // [ Handling HTTP API Endpoint: ]
 app.post('/data',(req, res) => {

@@ -6,6 +6,7 @@ function serveLogin(req, res){
 }
 
 async function handleLogin(req, res){
+    console.log(req.body);
     if(req.body.username && req.body.password){
         const user = await mongoose.model('User').findOne({
             username: req.body.username,
@@ -25,6 +26,7 @@ async function handleLogin(req, res){
 
 function handleLogout(req, res){
     req.session.destroy();
+    res.redirect('/login')
 }
 
 module.exports = {

@@ -20,3 +20,9 @@ const handleMqtt = (io,topic, message) => {
     io.to(username + AUTH_ID).emit('message',{'data':{'Temperature':parseInt(Temperature),'Humidity':parseInt(Humidity)},'time':timestamp});
   // Insert to Database Data
 }
+
+module.exports = {
+    handleHttp,
+
+    handleMqtt
+}
