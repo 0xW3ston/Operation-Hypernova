@@ -65,16 +65,14 @@ app.set('views','./views',{root:__dirname});
 mongoose.connect(`${process.env.DB_URL}`)
   .then(() => {
     console.log("Connected to DB");
+    app.listen(80, function () {
+      console.log('Example app listening on port 80!');
+    });
   })
 
 const mqtt_client = mqtt.connect(process.env.MQTT_URL);
 
 app.use(cors())
-
-
-const server = app.listen(80, function () {
-  console.log('Example app listening on port 80!');
-});
 
 // logger.format('FORMAT_MAIN', function (tokens, req, res) {
 //   const Now = new Date().toISOString();
