@@ -103,12 +103,12 @@ app.use(session(
     }
 ));
 
-const io = require('socket.io')(server, {
-  cors: {
-    origin: "http://localhost",
-    methods: ["GET", "POST"]
-  }
-});
+// const io = require('socket.io')(server, {
+//   cors: {
+//     origin: "http://localhost",
+//     methods: ["GET", "POST"]
+//   }
+// });
 
 // app.use(rateLimitAndBanMiddleware);
 
@@ -123,22 +123,22 @@ app.get('/',(req,res)=>{
   res.redirect('/login');
 });
 
-// [ Handling HTTP API Endpoint: ]
-app.post('/data',(req, res) => {
-  controllers.handleHttp(io,req,res);
-});
+// // [ Handling HTTP API Endpoint: ]
+// app.post('/data',(req, res) => {
+//   controllers.handleHttp(io,req,res);
+// });
 
-// [ Handling MQTT Endpoint: ]
-mqtt_client.on('message',(topic, message) => {
-  controllers.handleMqtt(io, topic, message)
-});
+// // [ Handling MQTT Endpoint: ]
+// mqtt_client.on('message',(topic, message) => {
+//   controllers.handleMqtt(io, topic, message)
+// });
 
-io.on('connection',(socket)=>{
-  const Room = socket.handshake.query.username + socket.handshake.query.AUTH_ID;
-  if(Room){
-    socket.join(Room);
-  };
-});
+// io.on('connection',(socket)=>{
+//   const Room = socket.handshake.query.username + socket.handshake.query.AUTH_ID;
+//   if(Room){
+//     socket.join(Room);
+//   };
+// });
 
 mqtt_client.on('connect',()=>{
   mqtt_client.subscribe("$DATA/#");
