@@ -6,7 +6,7 @@ const logger = require('morgan');
 const express = require('express');
 const session = require('express-session');
 const app = express();
-const PORT = 3000
+const port = 3000
 // // Set Up Rate-Limiting System:
 // const cacheNode = require('node-cache');
 // const MainCache = new cacheNode();
@@ -65,9 +65,6 @@ app.set('views','./views',{root:__dirname});
 mongoose.connect(`${process.env.DB_URL}`)
   .then(() => {
     console.log("Connected to DB");
-    app.listen(PORT, function () {
-      console.log('Example app listening on port 80!');
-    });
   })
 
 const mqtt_client = mqtt.connect(process.env.MQTT_URL);
@@ -101,6 +98,9 @@ app.use(session(
     }
 ));
 
+app.listen(port, function () {
+  console.log('Example app listening on port 80!');
+});
 // const io = require('socket.io')(server, {
 //   cors: {
 //     origin: "http://localhost",
