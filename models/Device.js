@@ -1,17 +1,29 @@
 const mongoose = require('mongoose');
-const { Schema } = mongoose;
 
-const DeviceSchema = new Schema({
-    AUTH_ID: { type: String, unique: true },
-    AUTH_PASS: String,
-    name: {
-      type: String,
-      required:false
-    }
-  });
+async function createDevice(AUTH_ID,AUTH_PASS,name){
+    await mongoose.model('Device').create({
+        AUTH_ID,
+        AUTH_PASS,
+        name
+    })
+}
 
-const Device = mongoose.model('Device', DeviceSchema);
+async function deleteDeviceByAUTH_ID(AUTH_ID){
+    await mongoose.model('Device').deleteOne({
+        AUTH_ID
+    })
+}
+
+async function getDeviceByAUTH_ID(AUTH_ID){
+    const device = await mongoose.model('Device').findOne({
+        AUTH_ID:AUTH_ID
+    });
+    return device;
+}
+
 
 module.exports = {
-    Device
+    createDevice,
+    deleteDeviceByAUTH_ID,
+    getDeviceByAUTH_ID
 }

@@ -1,15 +1,14 @@
 const mongoose = require('mongoose');
-const { Schema } = mongoose;
 
-const DataSchema = new Schema({
-    timestamp: Date,
-    device: { type: Schema.Types.ObjectId, ref: 'Device' },
-    temperature: Number,
-    humidity: Number,
-  });
-
-const Data = mongoose.model('Data', DataSchema);
+function insertData(device_id, temp, hum){
+    mongoose.model('Data').create({
+        timestamp:new Date().toISOString(),
+        device:device_id,
+        temperature:temp,
+        humidity:hum
+    })
+}
 
 module.exports = {
-    Data
+    insertData
 }

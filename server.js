@@ -1,12 +1,13 @@
 require('dotenv').config();
-require('./models/index')
-
+require('./models/schema/index')
+// require('./utilities/MQTT_Service');
 const chalk = require('chalk');
 const logger = require('morgan');
 const express = require('express');
 const session = require('express-session');
 const app = express();
 const port = 3000
+
 // // Set Up Rate-Limiting System:
 // const cacheNode = require('node-cache');
 // const MainCache = new cacheNode();
@@ -54,7 +55,7 @@ const port = 3000
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
-const mqtt = require('mqtt');
+
 // const controllers = require('./controllers/data.controller');
 
 //
@@ -66,8 +67,6 @@ mongoose.connect(`${process.env.DB_URL}`)
   .then(() => {
     console.log("Connected to DB");
   })
-
-const mqtt_client = mqtt.connect(process.env.MQTT_URL);
 
 app.use(cors())
 
@@ -114,7 +113,7 @@ app.listen(port, function () {
 app.use(require('./routes/user'));
 app.use('/admin',require('./routes/admin'));
 app.use(require('./routes/sse'));
-app.use(require('./routes/device'));
+// app.use(require('./routes/device'));
 app.use(require('./routes/auth'));
 
 app.get('/',(req,res)=>{
@@ -138,16 +137,6 @@ app.get('/',(req,res)=>{
 //   };
 // });
 
-mqtt_client.on('connect',()=>{
-  mqtt_client.subscribe("$DATA/#");
-});
-
-const RandomValue = () => {return parseInt(Math.random() * 100)};
-
-setInterval(()=>{
-    mqtt_client.publish('$DATA/MalcolmX/ARD01',`${RandomValue()};${RandomValue()}`);
-    mqtt_client.publish('$DATA/DonaldTrump/ARD04',`${RandomValue()};${RandomValue()}`);
-},5000);
 
 app.use((req,res) => {
   console.log(chalk.greenBright.bold("<<= out of path attempt =>>"));
