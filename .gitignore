@@ -6,3 +6,5 @@
 # /public
 
 /backup_views
+
+.env
