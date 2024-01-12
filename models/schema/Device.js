@@ -2,11 +2,17 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const DeviceSchema = new Schema({
-    AUTH_ID: { type: String, unique: true },
-    AUTH_PASS: String,
-    name: {
+    model: {
       type: String,
-      required:false
+      required: true
+    },
+    // last_ip_connected: { },
+    modifiedAt: {
+      type: Date
+    },
+    createdAt: {
+      type: Date,
+      default:new Date()
     }
   });
 

@@ -1,25 +1,40 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
-const { v4: uuidv4 } = require('uuid');
 
 const UserSchema = new Schema({
-  username: { type: String, unique: true },
-  passwordHash: String,
-  email: String,
-  role: { type: String, enum: ['admin', 'user'] },
+  username: {
+    type: String,
+    unique: true,
+    required: true
+  },
+  // passwordHash: String,
+  email: {
+    type: String,
+    unique: true,
+    required: true
+  },
+  role: {
+    type: String,
+    enum: ['admin', 'user'],
+    required: true
+  },
+  verifiedAt: {
+    type: Date
+  },
+  verify_token: {
+    type: String
+  }, 
+  modifiedAt: {
+    type: Date
+  },
   createdAt: {
     type: Date,
     default:new Date()
-  },
-  token:{
-    type:String,
-    default: uuidv4,
-    unique:true
   }
 });
 
 const User = mongoose.model('User', UserSchema);
 
 module.exports = {
-    User
+  User
 }
