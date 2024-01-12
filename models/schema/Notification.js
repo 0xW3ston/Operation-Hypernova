@@ -25,9 +25,6 @@ const NotificationSchema = new Schema({
     type: String,
     required: true
   },
-  modifiedAt: {
-    type: Date
-  },
   createdAt: {
     type: Date,
     default:new Date()
